@@ -1,44 +1,23 @@
+import 'dart:async';
+
 import 'package:eva_icons_flutter/eva_icons_flutter.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:preload_page_view/preload_page_view.dart';
+import 'package:tiktok/custom_elements/heart_shape.dart';
 
 import 'Elemets/video_post.dart';
 
-class AnaEkran extends StatefulWidget {
-  @override
-  _AnaEkranState createState() => _AnaEkranState();
-}
-
-class _AnaEkranState extends State<AnaEkran> {
+class AnaEkran extends StatelessWidget {
   var liste = ["assets/1.mp4", "assets/2.mp4", "assets/3.mp4", "assets/4.mp4"];
-  PreloadPageController _pageController;
-  bool isPageStable = false;
-  int current = 0;
+
   bool isFirstSelected = false;
-  @override
-  void initState() {
-    super.initState();
-    _pageController = PreloadPageController();
+  bool onPostLiked = false;
+  var controller = StreamController<bool>();
 
-    _pageController.addListener(scrollListener);
+  AnaEkran() {
+    controller.add(false);
   }
-
-  void scrollListener() {
-    if (isPageStable && _pageController.page == _pageController.page.roundToDouble()) {
-      setState(() {
-        current = _pageController.page.toInt();
-        isPageStable = false;
-      });
-    } else if (!isPageStable && current.toDouble() != _pageController.page) {
-      if ((current.toDouble() - _pageController.page).abs() > 0.1) {
-        setState(() {
-          isPageStable = true;
-        });
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -98,18 +77,13 @@ class _AnaEkranState extends State<AnaEkran> {
         height: MediaQuery.of(context).size.height,
         child: Stack(
           children: [
-            PreloadPageView.builder(
-              controller: _pageController,
-              preloadPagesCount: 3,
-              itemCount: liste.length,
-              scrollDirection: Axis.vertical,
-              itemBuilder: (context, index) {
-                return VideoPost(
-                  video_uri: liste[index],
-                  pageIndex: index,
-                  currentPageIndex: current,
-                );
+            GestureDetector(
+              onDoubleTap: () {
+                controller.add(true);
+                print("double clicked");
+                Future.delayed(Duration(milliseconds: 2000)).then((value) => controller.add(false));
               },
+              child: Post(liste: liste),
             ),
             SafeArea(
               child: Row(
@@ -117,9 +91,9 @@ class _AnaEkranState extends State<AnaEkran> {
                 children: [
                   GestureDetector(
                     onTap: () {
-                      setState(() {
-                        isFirstSelected = true;
-                      });
+                      // setState(() {
+                      //   isFirstSelected = true;
+                      // });
                     },
                     child: AnimatedDefaultTextStyle(
                       duration: Duration(milliseconds: 200),
@@ -147,9 +121,9 @@ class _AnaEkranState extends State<AnaEkran> {
                   ),
                   GestureDetector(
                     onTap: () {
-                      setState(() {
-                        isFirstSelected = false;
-                      });
+                      // setState(() {
+                      //   isFirstSelected = false;
+                      // });
                     },
                     child: AnimatedDefaultTextStyle(
                       duration: Duration(milliseconds: 200),
@@ -174,9 +148,83 @@ class _AnaEkranState extends State<AnaEkran> {
                 ],
               ),
             ),
+            StreamBuilder(
+              stream: controller.stream,
+              builder: (context, snapshot) {
+                print("Data:" + snapshot.data.toString());
+                if (snapshot.hasData) {
+                  if (snapshot.data) {
+                    return HeartShape();
+                  } else {
+                    return GestureDetector(
+                      child: Container(
+                        width: MediaQuery.of(context).size.width,
+                        height: MediaQuery.of(context).size.height,
+                      ),
+                    );
+                  }
+                } else {
+                  return Container();
+                }
+              },
+            ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class Post extends StatefulWidget {
+  var liste;
+  Post({this.liste});
+
+  @override
+  _PostState createState() => _PostState();
+}
+
+class _PostState extends State<Post> {
+  PreloadPageController _pageController;
+  bool isPageStable = false;
+  int current = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PreloadPageController();
+
+    _pageController.addListener(scrollListener);
+  }
+
+  void scrollListener() {
+    if (isPageStable && _pageController.page == _pageController.page.roundToDouble()) {
+      setState(() {
+        current = _pageController.page.toInt();
+        isPageStable = false;
+      });
+    } else if (!isPageStable && current.toDouble() != _pageController.page) {
+      if ((current.toDouble() - _pageController.page).abs() > 0.1) {
+        setState(() {
+          isPageStable = true;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return PreloadPageView.builder(
+      controller: _pageController,
+      preloadPagesCount: 3,
+      itemCount: widget.liste.length,
+      scrollDirection: Axis.vertical,
+      itemBuilder: (context, index) {
+        return VideoPost(
+          video_uri: widget.liste[index],
+          pageIndex: index,
+          currentPageIndex: current,
+        );
+      },
     );
   }
 }

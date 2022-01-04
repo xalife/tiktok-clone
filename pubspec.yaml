@@ -31,6 +31,7 @@ dependencies:
   video_player: ^2.1.1
   preload_page_view: ^0.1.6
   eva_icons_flutter: ^3.0.0
+  rive: ^0.7.12
 
 
 dev_dependencies:
